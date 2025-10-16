@@ -477,10 +477,249 @@ To run this script at regular intervals, add to crontab:
 0 * * * * cd /path/to/keymaster-app && python populate_skills.py
 ```
 
+## Docker Setup
+
+### Build Docker Image
+
+```bash
+# Build the Docker image
+docker build -t keymaster-app:latest .
+
+# Build with specific tag
+docker build -t keymaster-app:1.0.0 .
+```
+
+### Run Docker Container
+
+**Option 1: Using Docker Compose (Recommended for local development)**
+
+```bash
+# Start the app with Redis
+docker-compose up -d
+
+# View logs
+docker-compose logs -f keymaster-app
+
+# Stop the app
+docker-compose down
+```
+
+**Option 2: Using Docker Run (with external Redis)**
+
+```bash
+# Run the container with your Redis Cloud credentials
+docker run -d \
+  --name keymaster-app \
+  -p 8082:8082 \
+  -e REDIS_HOST=your_redis_host \
+  -e REDIS_PORT=your_redis_port \
+  -e REDIS_USERNAME=your_username \
+  -e REDIS_PASSWORD=your_password \
+  keymaster-app:latest
+```
+
+**Option 3: Using Docker Run (with local Redis)**
+
+```bash
+# Start Redis container
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+
+# Start the app container
+docker run -d \
+  --name keymaster-app \
+  -p 8082:8082 \
+  --link redis:redis \
+  -e REDIS_HOST=redis \
+  -e REDIS_PORT=6379 \
+  -e REDIS_USERNAME=default \
+  -e REDIS_PASSWORD="" \
+  keymaster-app:latest
+```
+
+### Docker Commands
+
+```bash
+# View running containers
+docker ps
+
+# View container logs
+docker logs keymaster-app
+
+# Follow logs in real-time
+docker logs -f keymaster-app
+
+# Execute command in container
+docker exec -it keymaster-app bash
+
+# Stop container
+docker stop keymaster-app
+
+# Remove container
+docker rm keymaster-app
+
+# Remove image
+docker rmi keymaster-app:latest
+```
+
+### Docker Compose Commands
+
+```bash
+# Start services
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Rebuild image
+docker-compose build --no-cache
+
+# Run one-off command
+docker-compose exec keymaster-app python populate_skills.py
+
+# View service status
+docker-compose ps
+```
+
+### Environment Variables for Docker
+
+Create a `.env` file in the project root:
+
+```bash
+# Redis Configuration
+REDIS_HOST=your_redis_host
+REDIS_PORT=your_redis_port
+REDIS_USERNAME=your_username
+REDIS_PASSWORD=your_password
+
+# Flask Configuration
+FLASK_ENV=production
+FLASK_DEBUG=False
+```
+
+### Health Check
+
+Once the container is running, verify it's healthy:
+
+```bash
+# Basic health check
+curl http://localhost:8082/health
+
+# Detailed health check
+curl http://localhost:8082/health/detailed
+
+# Check container health
+docker inspect --format='{{.State.Health.Status}}' keymaster-app
+```
+
+### Docker Image Details
+
+- **Base Image**: `python:3.12-slim`
+- **Working Directory**: `/app`
+- **Port**: `8082`
+- **Health Check**: Every 30 seconds
+- **Restart Policy**: `unless-stopped`
+
+### Dockerfile Optimization
+
+The Dockerfile uses several best practices:
+
+1. **Multi-stage builds** (if needed in future)
+2. **Layer caching** - Requirements copied before code
+3. **Minimal base image** - `python:3.12-slim` instead of full Python
+4. **Health checks** - Built-in container health monitoring
+5. **Environment variables** - Proper Python configuration
+6. **Non-root user** (optional - can be added for security)
+
+### Push to Docker Registry
+
+```bash
+# Tag image for Docker Hub
+docker tag keymaster-app:latest yourusername/keymaster-app:latest
+
+# Login to Docker Hub
+docker login
+
+# Push image
+docker push yourusername/keymaster-app:latest
+
+# Pull image
+docker pull yourusername/keymaster-app:latest
+```
+
+### Kubernetes Deployment
+
+Example Kubernetes manifest:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keymaster-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: keymaster-app
+  template:
+    metadata:
+      labels:
+        app: keymaster-app
+    spec:
+      containers:
+      - name: keymaster-app
+        image: keymaster-app:latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: host
+        - name: REDIS_PORT
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: port
+        - name: REDIS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: username
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: password
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8082
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+```
+
 ## Notes
 
 - The `.env` file contains sensitive credentials and is excluded from Git
 - Use `.env.example` as a template for setting up new environments
 - The Redis client uses a singleton pattern for efficient connection management
 - All responses are in JSON format
+- Docker images are optimized for production use with health checks and proper signal handling
 
