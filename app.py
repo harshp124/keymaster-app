@@ -32,6 +32,45 @@ def internal_server_error(error_message):
     }), 500
 
 
+@app.route("/v1/employees", methods=["GET"])
+def get_all_employees():
+    """
+    Fetch all employees data from Redis.
+
+    Returns:
+        JSON response with list of all employees or error message
+    """
+    try:
+        # Get all keys matching the pattern user:id:*
+        keys = redis_client.keys("user:id:*")
+
+        if not keys:
+            return jsonify({
+                "status": 200,
+                "data": [],
+                "message": "No employees found"
+            }), 200
+
+        employees = []
+        for key in keys:
+            try:
+                data = redis_client.json().get(key)
+                if data is not None:
+                    employees.append(data)
+            except Exception as e:
+                # Skip keys that can't be parsed
+                continue
+
+        return jsonify({
+            "status": 200,
+            "data": employees,
+            "count": len(employees)
+        }), 200
+
+    except Exception as e:
+        return internal_server_error(str(e))
+
+
 @app.route("/v1/employees/<employee_id>", methods=["GET"])
 def get_employee(employee_id):
     """

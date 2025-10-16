@@ -41,13 +41,51 @@ The API will start on `http://localhost:5000`
 
 ## API Endpoints
 
-### Get Employee Data
+### Get All Employees
+
+**Endpoint:** `GET /v1/employees`
+
+**Example:**
+```bash
+curl http://localhost:8090/v1/employees
+```
+
+**Success Response (200):**
+```json
+{
+  "status": 200,
+  "data": [
+    {
+      "name": "John Doe",
+      "email": "john@example.com",
+      ...
+    },
+    {
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      ...
+    }
+  ],
+  "count": 2
+}
+```
+
+**No Employees Response (200):**
+```json
+{
+  "status": 200,
+  "data": [],
+  "message": "No employees found"
+}
+```
+
+### Get Employee Data by ID
 
 **Endpoint:** `GET /v1/employees/{id}`
 
 **Example:**
 ```bash
-curl http://localhost:5000/v1/employees/367
+curl http://localhost:8090/v1/employees/367
 ```
 
 **Success Response (200):**
@@ -65,8 +103,9 @@ curl http://localhost:5000/v1/employees/367
 **Not Found Response (404):**
 ```json
 {
-  "error": "Employee with ID 367 not found",
-  "status": 404
+  "status": 404,
+  "error": "NOT_FOUND",
+  "message": "Employee with ID 367 not found"
 }
 ```
 
