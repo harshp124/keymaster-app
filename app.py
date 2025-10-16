@@ -4,10 +4,14 @@ Endpoint: GET /v1/employees/{id}
 """
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from redis_client import RedisClient
 import json
 
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app)
 
 # Initialize Redis client
 redis_client = RedisClient().get_client()
