@@ -37,7 +37,7 @@ FLASK_DEBUG=True
 python app.py
 ```
 
-The API will start on `http://localhost:5000`
+The API will start on `http://localhost:8082`
 
 ## API Endpoints
 
@@ -47,7 +47,7 @@ The API will start on `http://localhost:5000`
 
 **Example:**
 ```bash
-curl http://localhost:8090/v1/employees
+curl http://localhost:8082/v1/employees
 ```
 
 **Success Response (200):**
@@ -85,7 +85,7 @@ curl http://localhost:8090/v1/employees
 
 **Example:**
 ```bash
-curl http://localhost:8090/v1/employees/367
+curl http://localhost:8082/v1/employees/367
 ```
 
 **Success Response (200):**
@@ -115,7 +115,7 @@ curl http://localhost:8090/v1/employees/367
 
 **Example:**
 ```bash
-curl http://localhost:5000/health
+curl http://localhost:8082/health
 ```
 
 **Response:**
